@@ -1,0 +1,18 @@
+<section class="panel form-panel wide-form">
+    <div class="panel-header"><div><span class="section-kicker">Suivi de chantier</span><h2>Rapport journalier · <?= e($project['name']); ?></h2><p class="ui-page-intro">Consignez l’avancement, les consommations, les dépenses et les difficultés rencontrées sur le chantier.</p></div><a class="btn btn-secondary" href="<?= url('construction/projects/show?id=' . (int) $project['id']); ?>"><i class="bi bi-arrow-left"></i> Retour au cockpit</a></div>
+    <?php if ($message = Session::flash('error')): ?><div class="alert alert-danger"><?= e($message); ?></div><?php endif; ?>
+    <form method="post" action="<?= url('construction/daily_reports/store'); ?>" enctype="multipart/form-data" data-validate>
+        <?= Csrf::field(); ?><input type="hidden" name="construction_project_id" value="<?= (int) $project['id']; ?>">
+        <div class="form-grid">
+            <label>Date <input type="date" name="report_date" required value="<?= date('Y-m-d'); ?>"></label>
+            <label>Conditions météo <input name="weather" placeholder="Ex. Ensoleillé, pluie légère"></label>
+            <label class="span-2">Observations générales <textarea name="remarks" rows="3" placeholder="Résumé de la journée et faits marquants…"></textarea></label>
+            <label class="span-2">Blocages et risques <textarea name="blockers" rows="3" placeholder="Difficultés rencontrées et actions nécessaires…"></textarea></label>
+        </div>
+        <div class="line-items"><div class="line-items-header"><h3>Travaux exécutés</h3></div><?php foreach ($tasks as $task): ?><div class="fund-item-row construction-row"><input type="hidden" name="progress[task_id][]" value="<?= (int) $task['id']; ?>"><label>Travail <input readonly value="<?= e($task['name']); ?>"></label><label>Exécuté <input name="progress[executed_work][]" placeholder="Description"></label><label>Qté réalisée <input type="number" step="0.01" name="progress[quantity_done][]" value="0"></label><label>% avancement <input type="number" step="0.01" max="100" name="progress[progress_percent][]" value="<?= e((string) $task['progress_percent']); ?>"></label></div><?php endforeach; ?></div>
+        <div class="line-items"><div class="line-items-header"><h3>Consommables utilisés</h3></div><div class="fund-item-row construction-row"><label>Matériel <select name="consumptions[material_id][]"><option value="">Sélectionner</option><?php foreach ($materials as $material): ?><option value="<?= (int) $material['id']; ?>"><?= e($material['name']); ?> / <?= e($material['unit']); ?></option><?php endforeach; ?></select></label><label>Qté utilisée <input type="number" step="0.01" name="consumptions[quantity_used][]" value="0"></label><label>Coût unitaire <input type="number" step="0.01" name="consumptions[unit_cost][]" value="0"></label></div></div>
+        <div class="line-items"><div class="line-items-header"><h3>Dépenses du jour</h3></div><div class="fund-item-row construction-row"><label>Catégorie <input name="expenses[category][]" value="Divers"></label><label>Description <input name="expenses[description][]"></label><label>Montant <input type="number" step="0.01" name="expenses[amount][]" value="0"></label></div></div>
+        <div class="form-grid"><label class="span-2">Photos chantier <input type="file" name="photos[]" accept="image/png,image/jpeg" multiple></label><label class="span-2">Légende photos <input name="photo_caption"></label></div>
+        <div class="form-actions"><a class="btn btn-secondary" href="<?= url('construction/projects/show?id=' . (int) $project['id']); ?>">Annuler</a><button class="btn btn-primary" type="submit"><i class="bi bi-journal-check"></i> Enregistrer le rapport journalier</button></div>
+    </form>
+</section>

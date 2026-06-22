@@ -1,0 +1,20 @@
+name: 🔧 Test SSH
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST_WAKE }}
+          username: ${{ secrets.VPS_USER_WAKE }}
+          key: ${{ secrets.VPS_SSH_KEY_WAKE }}
+          script: |
+            echo "✅ Connexion réussie !"
+            whoami
+            pwd

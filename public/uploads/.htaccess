@@ -1,0 +1,9 @@
+Options -Indexes
+
+<FilesMatch "\.(php|phtml|phar|cgi|pl|asp|aspx|jsp|sh)$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "^(?!.*\.(pdf|jpg|jpeg|png)$).*$">
+    Require all denied
+</FilesMatch>

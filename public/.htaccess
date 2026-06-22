@@ -1,0 +1,20 @@
+Options -Indexes
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(env|ini|log|sql|bak|config|lock|md|php~)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /WAKE/public/
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^uploads/.*\.(php|phtml|phar|cgi|pl|asp|aspx|jsp|sh)$ - [F,L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
