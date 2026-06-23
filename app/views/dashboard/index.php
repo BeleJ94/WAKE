@@ -1,195 +1,291 @@
 <?php
 $chartPayload = json_encode($revenueExpenseChart);
 $servicePayload = json_encode($serviceExpenses);
+$kpisByKey = [];
+
+foreach ($kpis as $kpi) {
+    $kpisByKey[$kpi['key']] = $kpi;
+}
+
+$primaryKpiKeys = [
+    'monthly_revenue',
+    'global_margin',
+    'monthly_expenses',
+    'bank_accounts',
+    'unpaid_invoices',
+    'project_progress',
+];
+
+$primaryAlert = $importantAlerts[0] ?? [
+    'level' => 'OK',
+    'badge' => 'badge-success',
+    'text' => 'Aucune alerte critique détectée sur les données actuelles.',
+];
+
+$alertDetail = [
+    'Finance' => 'pending_requests',
+    'Relance' => 'unpaid_invoices',
+    'Logistique' => 'pending_deliveries',
+    'Construction' => 'critical_projects',
+    'OK' => 'global_margin',
+][$primaryAlert['level']] ?? 'global_margin';
+
+$monthNames = [
+    1 => 'janvier',
+    'février',
+    'mars',
+    'avril',
+    'mai',
+    'juin',
+    'juillet',
+    'août',
+    'septembre',
+    'octobre',
+    'novembre',
+    'décembre',
+];
+$periodLabel = ucfirst($monthNames[(int) date('n')]) . ' ' . date('Y');
 ?>
 
-<section class="executive-hero">
-    <div>
-        <span class="section-kicker">Direction générale</span>
-        <h2>Vue instantanée de WAKE SERVICES</h2>
-        <p>Indicateurs clés, risques opérationnels et priorités financières pour décider vite, même en déplacement.</p>
-    </div>
-    <button class="executive-summary dashboard-detail-trigger" type="button" data-dashboard-detail="global_margin">
-        <span>Marge estimée</span>
-        <strong><?= number_format((float) $summary['margin'], 1, ',', ' '); ?>%</strong>
-        <small>Revenus <?= money($summary['revenues']); ?> / dépenses <?= money($summary['expenses']); ?></small>
-        <em><i class="bi bi-arrows-angle-expand"></i> Voir le détail</em>
+<section class="cfo-dashboard">
+    <header class="cfo-header">
+        <div>
+            <h2>Tableau de bord financier</h2>
+            <p><?= e($periodLabel); ?> · Consolidé · USD · WAKE SERVICES</p>
+        </div>
+        <span class="cfo-period-status">
+            <i aria-hidden="true"></i>Période en cours
+        </span>
+    </header>
+
+    <?php if ($message = Session::flash('success')): ?>
+        <div class="alert alert-success"><?= e($message); ?></div>
+    <?php endif; ?>
+
+    <section class="cfo-kpi-grid" aria-label="Indicateurs financiers principaux">
+        <?php foreach ($primaryKpiKeys as $index => $key): ?>
+            <?php if (!isset($kpisByKey[$key])) continue; ?>
+            <?php $kpi = $kpisByKey[$key]; ?>
+            <button
+                class="cfo-kpi cfo-kpi-tone-<?= ($index % 3) + 1; ?> dashboard-detail-trigger"
+                type="button"
+                data-dashboard-detail="<?= e($kpi['key']); ?>"
+                aria-label="Afficher le détail : <?= e($kpi['label']); ?>"
+            >
+                <span><?= e($kpi['label']); ?></span>
+                <strong><?= e($kpi['value']); ?></strong>
+                <small><?= e($kpi['trend']); ?></small>
+            </button>
+        <?php endforeach; ?>
+    </section>
+
+    <button
+        class="cfo-alert dashboard-detail-trigger"
+        type="button"
+        data-dashboard-detail="<?= e($alertDetail); ?>"
+    >
+        <span class="cfo-alert-label"><?= e($primaryAlert['level']); ?></span>
+        <p><strong>Point d’attention —</strong> <?= e($primaryAlert['text']); ?></p>
+        <span class="cfo-alert-action">
+            Examiner
+            <?php if (count($importantAlerts) > 1): ?>
+                · <?= count($importantAlerts) - 1; ?> autre<?= count($importantAlerts) > 2 ? 's' : ''; ?>
+            <?php endif; ?>
+            <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+        </span>
     </button>
-</section>
 
-<?php if ($message = Session::flash('success')): ?>
-    <div class="alert alert-success"><?= e($message); ?></div>
-<?php endif; ?>
-
-<section class="kpi-grid executive-kpis">
-    <?php foreach ($kpis as $kpi): ?>
+    <section class="cfo-analysis-grid">
         <article
-            class="kpi-card decision-card dashboard-detail-trigger"
-            data-dashboard-detail="<?= e($kpi['key']); ?>"
+            class="cfo-panel dashboard-detail-trigger"
+            data-dashboard-detail="performance_chart"
             role="button"
             tabindex="0"
-            aria-label="Afficher le détail : <?= e($kpi['label']); ?>"
+            aria-label="Explorer l’évolution des revenus et dépenses"
         >
-            <div class="kpi-meta">
-                <span class="kpi-label">
-                    <span class="kpi-icon" aria-hidden="true"><i class="bi bi-<?= e($kpi['icon'] ?? 'activity'); ?>"></i></span>
-                    <?= e($kpi['label']); ?>
-                </span>
-                <span class="badge <?= e($kpi['badge']); ?>"><?= e($kpi['status']); ?></span>
+            <header class="cfo-panel-header">
+                <div>
+                    <span>Performance mensuelle</span>
+                    <h3>Revenus et dépenses</h3>
+                </div>
+                <span class="cfo-panel-link">6 mois <i class="bi bi-arrow-up-right"></i></span>
+            </header>
+            <div class="cfo-chart">
+                <canvas
+                    class="chart-canvas"
+                    data-chart="revenue-expense"
+                    data-payload="<?= e($chartPayload); ?>"
+                    aria-label="Évolution mensuelle des revenus et dépenses"
+                ></canvas>
             </div>
-            <strong><?= e($kpi['value']); ?></strong>
-            <small><?= e($kpi['trend']); ?></small>
-            <span class="detail-hint"><i class="bi bi-arrows-angle-expand"></i> Détails</span>
         </article>
-    <?php endforeach; ?>
-</section>
 
-<section class="dashboard-grid executive-grid">
-    <div class="panel panel-wide dashboard-detail-trigger" data-dashboard-detail="performance_chart" role="button" tabindex="0" aria-label="Afficher le détail du graphique revenus et dépenses">
-        <div class="panel-header">
-            <div>
-                <span class="section-kicker">Performance mensuelle</span>
-                <h3>Revenus vs dépenses</h3>
-            </div>
-            <span class="detail-hint"><i class="bi bi-arrows-angle-expand"></i> Explorer</span>
-        </div>
-        <div class="chart-wrap">
-            <canvas
-                class="chart-canvas"
-                data-chart="revenue-expense"
-                data-payload="<?= e($chartPayload); ?>"
-                aria-label="Graphique revenus versus dépenses"
-            ></canvas>
-        </div>
-    </div>
-
-    <aside class="panel dashboard-detail-trigger" data-dashboard-detail="service_expenses" role="button" tabindex="0" aria-label="Afficher le détail des dépenses par service">
-        <div class="panel-header">
-            <div>
-                <span class="section-kicker">Structure des coûts</span>
-                <h3>Dépenses par service</h3>
-            </div>
-            <span class="detail-hint"><i class="bi bi-arrows-angle-expand"></i> Explorer</span>
-        </div>
-        <div class="chart-wrap compact-chart">
-            <canvas
-                class="chart-canvas"
-                data-chart="service-expenses"
-                data-payload="<?= e($servicePayload); ?>"
-                aria-label="Graphique dépenses par service"
-            ></canvas>
-        </div>
-        <div class="legend-list">
-            <?php foreach ($serviceExpenses as $item): ?>
-                <div class="legend-item">
-                    <span style="--legend-color: <?= e($item['color']); ?>"></span>
-                    <strong><?= e($item['label']); ?></strong>
-                    <em><?= number_format((float) $item['value'], 0, ',', ' '); ?> USD</em>
+        <article
+            class="cfo-panel dashboard-detail-trigger"
+            data-dashboard-detail="service_expenses"
+            role="button"
+            tabindex="0"
+            aria-label="Explorer la répartition des dépenses"
+        >
+            <header class="cfo-panel-header">
+                <div>
+                    <span>Structure des coûts</span>
+                    <h3>Dépenses par service</h3>
                 </div>
-            <?php endforeach; ?>
-        </div>
-    </aside>
-</section>
-
-<section class="decision-grid">
-    <article class="panel dashboard-detail-trigger" data-dashboard-detail="recent_requests" role="button" tabindex="0" aria-label="Afficher toutes les demandes financières récentes">
-        <div class="panel-header">
-            <div>
-                <span class="section-kicker">Finance</span>
-                <h3>Dernières demandes financières</h3>
+                <span class="cfo-panel-link">Ce mois <i class="bi bi-arrow-up-right"></i></span>
+            </header>
+            <div class="cfo-mix-layout">
+                <div class="cfo-donut">
+                    <canvas
+                        class="chart-canvas"
+                        data-chart="service-expenses"
+                        data-payload="<?= e($servicePayload); ?>"
+                        aria-label="Répartition des dépenses par service"
+                    ></canvas>
+                </div>
+                <div class="cfo-mix-list">
+                    <?php
+                    $serviceTotal = array_sum(array_map(static fn (array $item): float => (float) $item['value'], $serviceExpenses));
+                    ?>
+                    <?php foreach ($serviceExpenses as $item): ?>
+                        <?php $share = $serviceTotal > 0 ? ((float) $item['value'] / $serviceTotal) * 100 : 0; ?>
+                        <div>
+                            <span class="cfo-mix-color" style="--mix-color: <?= e($item['color']); ?>"></span>
+                            <span>
+                                <strong><?= e($item['label']); ?></strong>
+                                <small><?= money($item['value']); ?></small>
+                            </span>
+                            <em><?= number_format($share, 1, ',', ' '); ?>%</em>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
-            <span class="detail-hint"><i class="bi bi-arrows-angle-expand"></i> <?= count($financialRequests); ?> récentes</span>
-        </div>
-        <div class="stack-list">
-            <?php foreach ($financialRequests as $request): ?>
-                <div class="stack-item">
+        </article>
+
+        <article
+            class="cfo-panel dashboard-detail-trigger"
+            data-dashboard-detail="global_margin"
+            role="button"
+            tabindex="0"
+            aria-label="Explorer la synthèse financière"
+        >
+            <header class="cfo-panel-header">
+                <div>
+                    <span>Synthèse financière</span>
+                    <h3>Résultat estimé</h3>
+                </div>
+                <span class="cfo-panel-link">USD <i class="bi bi-arrow-up-right"></i></span>
+            </header>
+            <div class="cfo-statement">
+                <div>
+                    <span>Revenus encaissés</span>
+                    <strong><?= money($summary['revenues']); ?></strong>
+                </div>
+                <div>
+                    <span>Dépenses payées</span>
+                    <strong class="is-muted">(<?= money($summary['expenses']); ?>)</strong>
+                </div>
+                <div class="is-total">
+                    <span>Résultat estimé</span>
+                    <strong><?= money((float) $summary['revenues'] - (float) $summary['expenses']); ?></strong>
+                </div>
+                <div class="is-highlight">
+                    <span>Marge estimée</span>
+                    <strong><?= number_format((float) $summary['margin'], 1, ',', ' '); ?>%</strong>
+                </div>
+            </div>
+        </article>
+
+        <article
+            class="cfo-panel dashboard-detail-trigger"
+            data-dashboard-detail="overdue_invoices"
+            role="button"
+            tabindex="0"
+            aria-label="Explorer les créances clients"
+        >
+            <header class="cfo-panel-header">
+                <div>
+                    <span>Recouvrement</span>
+                    <h3>Créances prioritaires</h3>
+                </div>
+                <span class="cfo-panel-link"><?= count($overdueInvoices); ?> dossier<?= count($overdueInvoices) > 1 ? 's' : ''; ?> <i class="bi bi-arrow-up-right"></i></span>
+            </header>
+            <div class="cfo-record-list">
+                <?php foreach ($overdueInvoices as $invoice): ?>
                     <div>
-                        <strong><?= e($request['ref']); ?></strong>
-                        <small><?= e($request['service']); ?> · <?= e($request['amount']); ?></small>
+                        <span>
+                            <strong><?= e($invoice['client']); ?></strong>
+                            <small><?= e($invoice['invoice']); ?> · <?= e($invoice['days']); ?></small>
+                        </span>
+                        <em><?= e($invoice['amount']); ?></em>
                     </div>
-                    <span class="badge <?= e($request['badge']); ?>"><?= e(status_label($request['status'])); ?></span>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </article>
-
-    <article class="panel dashboard-detail-trigger" data-dashboard-detail="critical_projects" role="button" tabindex="0" aria-label="Afficher les projets critiques">
-        <div class="panel-header">
-            <div>
-                <span class="section-kicker">Construction</span>
-                <h3>Projets critiques</h3>
+                <?php endforeach; ?>
+                <?php if ($overdueInvoices === []): ?>
+                    <div class="cfo-panel-empty">Aucune créance prioritaire.</div>
+                <?php endif; ?>
             </div>
-            <span class="detail-hint"><i class="bi bi-arrows-angle-expand"></i> <?= count($criticalProjects); ?> suivis</span>
-        </div>
-        <div class="stack-list">
-            <?php foreach ($criticalProjects as $project): ?>
-                <div class="project-row">
-                    <div class="project-copy">
-                        <strong><?= e($project['name']); ?></strong>
-                        <small><?= e($project['risk']); ?> · <?= e($project['owner']); ?></small>
-                    </div>
-                    <div class="progress-box">
-                        <span><?= (int) $project['progress']; ?>%</span>
-                        <div class="progress-track"><i style="width: <?= (int) $project['progress']; ?>%"></i></div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </article>
+        </article>
 
-    <article class="panel dashboard-detail-trigger" data-dashboard-detail="overdue_invoices" role="button" tabindex="0" aria-label="Afficher les factures en retard">
-        <div class="panel-header">
-            <div>
-                <span class="section-kicker">Recouvrement</span>
-                <h3>Factures en retard</h3>
-            </div>
-            <span class="detail-hint"><i class="bi bi-arrows-angle-expand"></i> <?= count($overdueInvoices); ?> ouvertes</span>
-        </div>
-        <div class="stack-list">
-            <?php foreach ($overdueInvoices as $invoice): ?>
-                <div class="stack-item">
+        <article
+            class="cfo-panel dashboard-detail-trigger"
+            data-dashboard-detail="recent_requests"
+            role="button"
+            tabindex="0"
+            aria-label="Explorer les demandes financières récentes"
+        >
+            <header class="cfo-panel-header">
+                <div>
+                    <span>Décaissements</span>
+                    <h3>Demandes récentes</h3>
+                </div>
+                <span class="cfo-panel-link"><?= count($financialRequests); ?> récentes <i class="bi bi-arrow-up-right"></i></span>
+            </header>
+            <div class="cfo-record-list">
+                <?php foreach ($financialRequests as $request): ?>
                     <div>
-                        <strong><?= e($invoice['client']); ?></strong>
-                        <small><?= e($invoice['invoice']); ?> · <?= e($invoice['days']); ?></small>
+                        <span>
+                            <strong><?= e($request['ref']); ?></strong>
+                            <small><?= e($request['service']); ?> · <?= e(status_label($request['status'])); ?></small>
+                        </span>
+                        <em><?= e($request['amount']); ?></em>
                     </div>
-                    <span class="amount-text"><?= e($invoice['amount']); ?></span>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </article>
-</section>
-
-<section class="panel alerts-panel">
-    <div class="panel-header">
-        <div>
-            <span class="section-kicker">Priorités dirigeant</span>
-            <h3>Alertes importantes</h3>
-        </div>
-    </div>
-    <div class="alert-grid">
-        <?php foreach ($importantAlerts as $alert): ?>
-            <?php
-            $alertDetail = [
-                'Finance' => 'pending_requests',
-                'Relance' => 'unpaid_invoices',
-                'Logistique' => 'pending_deliveries',
-                'Construction' => 'critical_projects',
-                'OK' => 'global_margin',
-            ][$alert['level']] ?? 'global_margin';
-            ?>
-            <div
-                class="alert-card dashboard-detail-trigger"
-                data-dashboard-detail="<?= e($alertDetail); ?>"
-                role="button"
-                tabindex="0"
-                aria-label="Afficher le détail de l’alerte <?= e($alert['level']); ?>"
-            >
-                <span class="badge <?= e($alert['badge']); ?>"><?= e($alert['level']); ?></span>
-                <p><?= e($alert['text']); ?></p>
-                <span class="detail-hint"><i class="bi bi-arrow-up-right"></i> Examiner</span>
+                <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
-    </div>
+        </article>
+
+        <article
+            class="cfo-panel dashboard-detail-trigger"
+            data-dashboard-detail="critical_projects"
+            role="button"
+            tabindex="0"
+            aria-label="Explorer les projets à surveiller"
+        >
+            <header class="cfo-panel-header">
+                <div>
+                    <span>Exécution opérationnelle</span>
+                    <h3>Projets à surveiller</h3>
+                </div>
+                <span class="cfo-panel-link"><?= count($criticalProjects); ?> suivi<?= count($criticalProjects) > 1 ? 's' : ''; ?> <i class="bi bi-arrow-up-right"></i></span>
+            </header>
+            <div class="cfo-project-list">
+                <?php foreach ($criticalProjects as $project): ?>
+                    <div>
+                        <span>
+                            <strong><?= e($project['name']); ?></strong>
+                            <small><?= e($project['risk']); ?> · <?= e($project['owner']); ?></small>
+                        </span>
+                        <span class="cfo-project-progress">
+                            <em><?= (int) $project['progress']; ?>%</em>
+                            <i><b style="width: <?= (int) $project['progress']; ?>%"></b></i>
+                        </span>
+                    </div>
+                <?php endforeach; ?>
+                <?php if ($criticalProjects === []): ?>
+                    <div class="cfo-panel-empty">Aucun projet critique.</div>
+                <?php endif; ?>
+            </div>
+        </article>
+    </section>
 </section>
 
 <div class="modal dashboard-detail-modal" id="dashboard-detail-modal" aria-hidden="true" data-dashboard-detail-modal>

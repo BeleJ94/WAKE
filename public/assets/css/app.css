@@ -7330,6 +7330,510 @@ body {
     to { transform: rotate(360deg); }
 }
 
+/* Executive financial dashboard */
+.cfo-dashboard {
+    display: grid;
+    gap: 18px;
+    color: #1f2933;
+}
+
+.cfo-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 2px 2px 8px;
+}
+
+.cfo-header h2,
+.cfo-header p {
+    margin: 0;
+}
+
+.cfo-header h2 {
+    color: #171b21;
+    font-size: clamp(26px, 3vw, 36px);
+    line-height: 1.1;
+    letter-spacing: -0.045em;
+}
+
+.cfo-header p {
+    margin-top: 8px;
+    color: #626b76;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.cfo-period-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border: 1px solid #ead9ae;
+    border-radius: 8px;
+    background: #fbf2dd;
+    color: #765817;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.cfo-period-status i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c89018;
+}
+
+.cfo-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.cfo-kpi {
+    display: block;
+    min-width: 0;
+    min-height: 112px;
+    padding: 18px 20px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: #f4f4ef;
+    color: #20262d;
+    text-align: left;
+    box-shadow: none;
+    transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.cfo-kpi:hover,
+.cfo-kpi:focus-visible {
+    border-color: #ced5da;
+    background: #f8f8f4;
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.cfo-kpi > span,
+.cfo-kpi > small {
+    display: block;
+}
+
+.cfo-kpi > span {
+    color: #65707a;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.cfo-kpi > strong {
+    display: block;
+    margin: 7px 0 4px;
+    overflow: hidden;
+    color: #1b5f3e;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: clamp(20px, 2.1vw, 28px);
+    font-weight: 650;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cfo-kpi-tone-1 > strong {
+    color: #1769a0;
+}
+
+.cfo-kpi-tone-3 > strong {
+    color: #805817;
+}
+
+.cfo-kpi > small {
+    overflow: hidden;
+    color: #68717a;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cfo-alert {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #d7bd84;
+    border-radius: 9px;
+    background: #fbf2df;
+    color: #4b402b;
+    text-align: left;
+    transition: background 150ms ease, border-color 150ms ease;
+}
+
+.cfo-alert:hover,
+.cfo-alert:focus-visible {
+    border-color: #bd984d;
+    background: #fff5e2;
+    outline: none;
+}
+
+.cfo-alert-label {
+    color: #755816;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.cfo-alert p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.cfo-alert-action {
+    color: #765817;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.cfo-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.cfo-panel {
+    min-width: 0;
+    min-height: 310px;
+    padding: 18px;
+    overflow: hidden;
+    border: 1px solid #dde1e4;
+    border-radius: 11px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.025);
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.cfo-panel:hover,
+.cfo-panel:focus-visible {
+    border-color: #bfc7cd;
+    outline: none;
+    box-shadow: 0 7px 20px rgba(15, 23, 42, 0.055);
+    transform: translateY(-1px);
+}
+
+.cfo-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.cfo-panel-header span,
+.cfo-panel-header h3 {
+    display: block;
+    margin: 0;
+}
+
+.cfo-panel-header > div > span {
+    color: #777f87;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.cfo-panel-header h3 {
+    margin-top: 4px;
+    color: #262b31;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+}
+
+.cfo-panel-link {
+    color: #777f87;
+    font-size: 9px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.cfo-panel-link i {
+    margin-left: 3px;
+}
+
+.cfo-chart {
+    height: 235px;
+}
+
+.cfo-chart canvas,
+.cfo-donut canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.cfo-mix-layout {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.8fr) minmax(210px, 1.2fr);
+    align-items: center;
+    gap: 18px;
+    min-height: 225px;
+}
+
+.cfo-donut {
+    height: 190px;
+}
+
+.cfo-mix-list {
+    display: grid;
+    gap: 0;
+}
+
+.cfo-mix-list > div {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 0;
+    border-bottom: 1px solid #edf0f2;
+}
+
+.cfo-mix-list > div:last-child {
+    border-bottom: 0;
+}
+
+.cfo-mix-color {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: var(--mix-color);
+}
+
+.cfo-mix-list strong,
+.cfo-mix-list small {
+    display: block;
+}
+
+.cfo-mix-list strong {
+    overflow: hidden;
+    color: #343a40;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cfo-mix-list small {
+    margin-top: 2px;
+    color: #848c94;
+    font-size: 9px;
+}
+
+.cfo-mix-list em {
+    color: #4d555d;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 800;
+}
+
+.cfo-statement {
+    display: grid;
+}
+
+.cfo-statement > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    min-height: 43px;
+    padding: 9px 2px;
+    border-bottom: 1px solid #edf0f2;
+}
+
+.cfo-statement > div:last-child {
+    border-bottom: 0;
+}
+
+.cfo-statement span {
+    color: #555e67;
+    font-size: 11px;
+}
+
+.cfo-statement strong {
+    color: #252b31;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.cfo-statement strong.is-muted {
+    color: #66717b;
+}
+
+.cfo-statement .is-total {
+    margin-top: 3px;
+    border-top: 1px solid #bbc2c8;
+}
+
+.cfo-statement .is-total span,
+.cfo-statement .is-total strong {
+    color: #1f252b;
+    font-weight: 850;
+}
+
+.cfo-statement .is-highlight strong {
+    color: #1b6d43;
+    font-size: 16px;
+}
+
+.cfo-record-list,
+.cfo-project-list {
+    display: grid;
+}
+
+.cfo-record-list > div,
+.cfo-project-list > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    gap: 18px;
+    padding: 12px 2px;
+    border-bottom: 1px solid #edf0f2;
+}
+
+.cfo-record-list > div:last-child,
+.cfo-project-list > div:last-child {
+    border-bottom: 0;
+}
+
+.cfo-record-list strong,
+.cfo-record-list small,
+.cfo-project-list strong,
+.cfo-project-list small {
+    display: block;
+}
+
+.cfo-record-list strong,
+.cfo-project-list strong {
+    color: #30363c;
+    font-size: 11px;
+}
+
+.cfo-record-list small,
+.cfo-project-list small {
+    max-width: 330px;
+    margin-top: 3px;
+    overflow: hidden;
+    color: #7a838c;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cfo-record-list em {
+    color: #263039;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cfo-project-progress {
+    width: 100px;
+    flex: 0 0 100px;
+}
+
+.cfo-project-progress em {
+    display: block;
+    margin-bottom: 5px;
+    color: #3f4851;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 800;
+    text-align: right;
+}
+
+.cfo-project-progress > i {
+    display: block;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e5e9ec;
+}
+
+.cfo-project-progress b {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #159a6b;
+}
+
+.cfo-panel-empty {
+    justify-content: center !important;
+    min-height: 170px;
+    color: #7a838c;
+    font-size: 11px;
+}
+
+@media (max-width: 1120px) {
+    .cfo-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cfo-mix-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cfo-donut {
+        height: 145px;
+    }
+}
+
+@media (max-width: 820px) {
+    .cfo-analysis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cfo-mix-layout {
+        grid-template-columns: minmax(130px, 0.75fr) minmax(190px, 1.25fr);
+    }
+}
+
+@media (max-width: 620px) {
+    .cfo-header,
+    .cfo-alert {
+        align-items: flex-start;
+        grid-template-columns: 1fr;
+    }
+
+    .cfo-header {
+        flex-direction: column;
+    }
+
+    .cfo-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cfo-kpi {
+        min-height: 102px;
+    }
+
+    .cfo-alert-action {
+        white-space: normal;
+    }
+
+    .cfo-mix-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cfo-panel {
+        min-height: auto;
+        padding: 16px;
+    }
+}
+
 /* Client portfolio */
 .clients-page {
     display: grid;
