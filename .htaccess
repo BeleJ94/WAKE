@@ -1,17 +1,11 @@
-Options -Indexes
-
-<FilesMatch "^\.|(\.env|composer\.(json|lock)|.*\.(sql|log|bak|ini|md))$">
-    Require all denied
-</FilesMatch>
-
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Protect application sources when the project root is used as DocumentRoot.
-    RewriteRule ^(app|config|database|scripts|vendor|\.git|\.env)(/|$) - [F,L]
+    # Protect application sources when the project root is the DocumentRoot.
+    RewriteRule ^(?:app|config|database|scripts|vendor|storage|\.git|\.env)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:composer\.(?:json|lock)|README\.md)$ - [F,L,NC]
 
     # Stop rewriting once the request has already been routed to /public.
-    # Without this guard Apache can produce /public/public/... indefinitely.
     RewriteRule ^public(?:/|$) - [L]
 
     # Route public requests to the web entry directory.
