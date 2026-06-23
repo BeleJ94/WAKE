@@ -15,18 +15,27 @@ jobs:
           username: ${{ secrets.VPS_USER_WAKE }}
           key: ${{ secrets.VPS_SSH_KEY_WAKE }}
           script: |
-            echo "=== DÉPLOIEMENT DÉMARRÉ ==="
             cd /var/www/vhosts/belej-erp.com/wake.belej-erp.com
-            echo "1. État avant mise à jour :"
-            git log -1 --oneline
-            echo "2. Récupération des changements..."
+            
+            # 🔒 SAUVEGARDE du fichier protégé
+            echo "🔒 Sauvegarde du fichier config/config.php..."
+            if [ -f config/config.php ]; then
+                cp config/config.php /tmp/config.php.backup
+            fi
+            
+            # 📥 Mise à jour du code
+            echo "📥 Mise à jour du code..."
             git fetch origin
-            echo "3. Mise à jour forcée..."
             git reset --hard origin/main
-            echo "4. État après mise à jour :"
-            git log -1 --oneline
-            echo "5. Correction des permissions..."
+            
+            # ♻️ RESTAURATION du fichier protégé
+            echo "♻️ Restauration de config/config.php..."
+            if [ -f /tmp/config.php.backup ]; then
+                cp /tmp/config.php.backup config/config.php
+                echo "✅ Fichier config/config.php préservé !"
+            fi
+            
+            # 🔧 Permissions
             sudo chown -R www-data:www-data .
             sudo find . -type d -exec chmod 755 {} \;
             sudo find . -type f -exec chmod 644 {} \;
-            echo "=== DÉPLOIEMENT TERMINÉ ==="

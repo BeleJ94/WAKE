@@ -289,40 +289,62 @@ $periodLabel = ucfirst($monthNames[(int) date('n')]) . ' ' . date('Y');
 </section>
 
 <div class="modal dashboard-detail-modal" id="dashboard-detail-modal" aria-hidden="true" data-dashboard-detail-modal>
-    <div class="modal-card modal-dashboard" role="dialog" aria-modal="true" aria-labelledby="dashboard-detail-title">
-        <div class="modal-header">
-            <div>
-                <span class="section-kicker">Analyse détaillée</span>
+    <div class="modal-card modal-dashboard" role="dialog" aria-modal="true" aria-labelledby="dashboard-detail-title" tabindex="-1">
+        <header class="dashboard-detail-header">
+            <div class="dashboard-detail-heading">
+                <span class="dashboard-detail-eyebrow" data-dashboard-detail-eyebrow>Analyse financière</span>
                 <h3 id="dashboard-detail-title" data-dashboard-detail-title>Détail</h3>
                 <p data-dashboard-detail-description></p>
+                <div class="dashboard-detail-context">
+                    <span><i class="bi bi-calendar3"></i><?= e($periodLabel); ?></span>
+                    <span><i class="bi bi-building"></i>WAKE SERVICES</span>
+                    <span><i class="bi bi-currency-dollar"></i>Données consolidées</span>
+                </div>
             </div>
-            <button class="icon-button" type="button" data-dashboard-detail-close aria-label="Fermer">
+            <button class="dashboard-detail-close" type="button" data-dashboard-detail-close aria-label="Fermer le détail">
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
-        </div>
+        </header>
 
         <div class="dashboard-detail-state" data-dashboard-detail-state>
-            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-            <span>Chargement des données...</span>
+            <div class="dashboard-detail-loader" aria-hidden="true"></div>
+            <strong>Préparation de l’analyse</strong>
+            <span>Chargement des données consolidées…</span>
         </div>
 
         <div class="dashboard-detail-content" data-dashboard-detail-content hidden>
+            <section class="dashboard-detail-summary" data-dashboard-detail-summary aria-label="Synthèse du détail"></section>
+
             <div class="dashboard-detail-toolbar">
-                <span data-dashboard-detail-count></span>
-                <div class="toolbar-actions">
-                    <a class="btn btn-secondary" href="#" data-dashboard-export-excel>
-                        <i class="bi bi-file-earmark-excel"></i> Excel
+                <label class="dashboard-detail-search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <span class="sr-only">Rechercher dans les résultats</span>
+                    <input type="search" placeholder="Rechercher dans les résultats…" data-dashboard-detail-search>
+                </label>
+                <div class="dashboard-detail-toolbar-meta">
+                    <span data-dashboard-detail-count></span>
+                    <span class="dashboard-detail-separator" aria-hidden="true"></span>
+                    <span>Mise à jour à l’ouverture</span>
+                </div>
+                <div class="dashboard-detail-actions">
+                    <a class="dashboard-detail-action" href="#" data-dashboard-export-excel>
+                        <i class="bi bi-file-earmark-spreadsheet"></i><span>Excel</span>
                     </a>
-                    <a class="btn btn-primary" href="#" data-dashboard-export-pdf>
-                        <i class="bi bi-file-earmark-pdf"></i> PDF
+                    <a class="dashboard-detail-action is-primary" href="#" data-dashboard-export-pdf>
+                        <i class="bi bi-file-earmark-pdf"></i><span>PDF</span>
                     </a>
                 </div>
             </div>
-            <div class="table-responsive dashboard-detail-table-wrap">
+            <div class="table-responsive dashboard-detail-table-wrap" data-dashboard-detail-table-wrap>
                 <table class="data-table dashboard-detail-table">
                     <thead data-dashboard-detail-head></thead>
                     <tbody data-dashboard-detail-body></tbody>
                 </table>
+            </div>
+            <div class="dashboard-detail-no-results" data-dashboard-detail-no-results hidden>
+                <i class="bi bi-search"></i>
+                <strong>Aucun résultat</strong>
+                <span>Essayez un terme de recherche différent.</span>
             </div>
         </div>
     </div>

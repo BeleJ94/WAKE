@@ -281,6 +281,8 @@
 
     var dashboardDetailModal = document.querySelector('[data-dashboard-detail-modal]');
     var dashboardDetailTrigger = null;
+    var dashboardDetailPayload = null;
+    var dashboardDetailRequest = null;
 
     function escapeDashboardHtml(value) {
         return String(value === null || value === undefined ? '' : value)
@@ -298,9 +300,166 @@
         dashboardDetailModal.classList.remove('is-open');
         dashboardDetailModal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
+        if (dashboardDetailRequest) {
+            dashboardDetailRequest.abort();
+            dashboardDetailRequest = null;
+        }
         if (dashboardDetailTrigger) {
             dashboardDetailTrigger.focus();
         }
+    }
+
+    function dashboardDetailCategory(type) {
+        if (type === 'overdue_invoices' || type === 'unpaid_invoices') {
+            return { label: 'Recouvrement', icon: 'receipt', tone: 'warning' };
+        }
+        if (type === 'critical_projects' || type === 'project_progress' || type === 'construction_projects') {
+            return { label: 'Exécution opérationnelle', icon: 'buildings', tone: 'green' };
+        }
+        if (type === 'pending_requests' || type === 'recent_requests' || type === 'monthly_expenses' || type === 'service_expenses') {
+            return { label: 'Décaissements', icon: 'cash-stack', tone: 'warning' };
+        }
+        if (type === 'bank_accounts' || type === 'cash_accounts') {
+            return { label: 'Trésorerie', icon: 'bank', tone: 'blue' };
+        }
+        if (type === 'performance_chart' || type === 'monthly_revenue') {
+            return { label: 'Performance financière', icon: 'graph-up-arrow', tone: 'blue' };
+        }
+        return { label: 'Analyse financière', icon: 'bar-chart-line', tone: 'green' };
+    }
+
+    function parseDashboardAmount(value) {
+        var text = String(value || '').replace(/\u00a0/g, ' ').trim();
+        if (!/[0-9]/.test(text)) {
+            return null;
+        }
+        var cleaned = text.replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.');
+        var number = Number.parseFloat(cleaned);
+        return Number.isFinite(number) ? number : null;
+    }
+
+    function dashboardColumnKind(column) {
+        var label = String(column || '').toLowerCase();
+        if (/montant|solde|total|payé|reste|coût|marge|revenus|dépenses|résultat|écart|valeur/.test(label)) {
+            return 'amount';
+        }
+        if (/statut|status|risque/.test(label)) {
+            return 'status';
+        }
+        if (/date|échéance|créée le|besoin le/.test(label)) {
+            return 'date';
+        }
+        if (/retard/.test(label)) {
+            return 'delay';
+        }
+        if (/avancement|progression/.test(label)) {
+            return 'progress';
+        }
+        return 'text';
+    }
+
+    function dashboardStatusTone(value) {
+        var text = String(value || '').toLowerCase();
+        if (/paid|payé|active|actif|valid|approved|approuvé|terminé|completed|confortable|bon/.test(text)) {
+            return 'success';
+        }
+        if (/pending|attente|partial|partiel|progress|cours|surveiller|retard/.test(text)) {
+            return 'warning';
+        }
+        if (/cancel|rejet|critical|critique|urgent|overdue|impayé/.test(text)) {
+            return 'danger';
+        }
+        return 'neutral';
+    }
+
+    function dashboardDetailCell(value, kind, column, index) {
+        var displayValue = value === null || value === undefined || value === '' ? '—' : value;
+        var safeValue = escapeDashboardHtml(displayValue);
+        var cardLabel = '<span class="dashboard-detail-card-label">' + escapeDashboardHtml(column) + '</span>';
+        if (kind === 'status') {
+            return cardLabel + '<span class="dashboard-detail-badge is-' + dashboardStatusTone(value) + '">' + safeValue + '</span>';
+        }
+        if (kind === 'delay') {
+            var delay = parseInt(String(value), 10) || 0;
+            return cardLabel + '<span class="dashboard-detail-delay' + (delay > 0 ? ' is-late' : '') + '">' + safeValue + '</span>';
+        }
+        if (kind === 'progress') {
+            var progress = Math.max(0, Math.min(100, parseFloat(String(value).replace(',', '.')) || 0));
+            return cardLabel + '<span class="dashboard-detail-progress"><span><b style="width:' + progress + '%"></b></span><em>' + safeValue + '</em></span>';
+        }
+        return cardLabel + '<span class="' + (kind === 'amount' ? 'dashboard-detail-amount' : '') + '">' + safeValue + '</span>';
+    }
+
+    function dashboardDetailSummaries(payload) {
+        var rows = payload.rows || [];
+        var columns = payload.columns || [];
+        var type = payload.type || '';
+        var category = dashboardDetailCategory(type);
+        var summaries = [{
+            label: 'Éléments analysés',
+            value: String(rows.length),
+            note: rows.length > 1 ? 'lignes consolidées' : 'ligne consolidée',
+            icon: 'collection',
+            tone: category.tone
+        }];
+        var amountIndexes = columns.map(function (column, index) {
+            return dashboardColumnKind(column) === 'amount' ? index : -1;
+        }).filter(function (index) { return index >= 0; });
+        var preferredIndex = amountIndexes.length ? amountIndexes[amountIndexes.length - 1] : -1;
+
+        if (preferredIndex >= 0 && rows.length > 1) {
+            var values = rows.map(function (row) { return parseDashboardAmount(row[preferredIndex]); })
+                .filter(function (value) { return value !== null; });
+            if (values.length) {
+                var source = String(rows[0][preferredIndex] || '');
+                var currency = source.match(/\b(USD|CDF|EUR)\b/i);
+                var total = values.reduce(function (sum, value) { return sum + value; }, 0);
+                summaries.push({
+                    label: 'Volume cumulé',
+                    value: total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + (currency ? ' ' + currency[1].toUpperCase() : ''),
+                    note: columns[preferredIndex],
+                    icon: 'calculator',
+                    tone: type.indexOf('expense') >= 0 || type.indexOf('invoice') >= 0 ? 'warning' : 'green'
+                });
+            }
+        }
+
+        if (/invoice/.test(type)) {
+            var delayIndex = columns.findIndex(function (column) { return dashboardColumnKind(column) === 'delay'; });
+            var delayed = delayIndex >= 0 ? rows.filter(function (row) { return (parseInt(String(row[delayIndex]), 10) || 0) > 0; }).length : rows.length;
+            summaries.push({ label: 'Priorités', value: String(delayed), note: 'dossiers à suivre', icon: 'exclamation-triangle', tone: 'warning' });
+        } else if (/project/.test(type)) {
+            var progressIndex = columns.findIndex(function (column) { return dashboardColumnKind(column) === 'progress'; });
+            var progressValues = progressIndex >= 0 ? rows.map(function (row) { return parseFloat(String(row[progressIndex]).replace(',', '.')) || 0; }) : [];
+            var average = progressValues.length ? progressValues.reduce(function (sum, value) { return sum + value; }, 0) / progressValues.length : 0;
+            summaries.push({ label: 'Avancement moyen', value: average.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + '%', note: 'portefeuille affiché', icon: 'activity', tone: 'green' });
+        } else {
+            summaries.push({ label: 'Périmètre', value: 'Mois courant', note: 'données opérationnelles', icon: 'calendar3', tone: 'neutral' });
+        }
+
+        return summaries.slice(0, 3);
+    }
+
+    function renderDashboardRows(payload, query) {
+        var body = dashboardDetailModal.querySelector('[data-dashboard-detail-body]');
+        var count = dashboardDetailModal.querySelector('[data-dashboard-detail-count]');
+        var noResults = dashboardDetailModal.querySelector('[data-dashboard-detail-no-results]');
+        var columns = payload.columns || [];
+        var normalizedQuery = String(query || '').trim().toLocaleLowerCase('fr');
+        var rows = (payload.rows || []).filter(function (row) {
+            return !normalizedQuery || row.join(' ').toLocaleLowerCase('fr').indexOf(normalizedQuery) !== -1;
+        });
+
+        body.innerHTML = rows.map(function (row) {
+            return '<tr>' + row.map(function (value, index) {
+                var kind = dashboardColumnKind(columns[index]);
+                return '<td class="is-' + kind + '" data-label="' + escapeDashboardHtml(columns[index]) + '">' +
+                    dashboardDetailCell(value, kind, columns[index], index) + '</td>';
+            }).join('') + '</tr>';
+        }).join('');
+        count.textContent = rows.length + (rows.length > 1 ? ' résultats' : ' résultat');
+        noResults.hidden = rows.length > 0;
+        dashboardDetailModal.querySelector('[data-dashboard-detail-table-wrap]').hidden = rows.length === 0;
     }
 
     function renderDashboardDetail(payload) {
@@ -308,23 +467,29 @@
         var content = dashboardDetailModal.querySelector('[data-dashboard-detail-content]');
         var title = dashboardDetailModal.querySelector('[data-dashboard-detail-title]');
         var description = dashboardDetailModal.querySelector('[data-dashboard-detail-description]');
-        var count = dashboardDetailModal.querySelector('[data-dashboard-detail-count]');
+        var eyebrow = dashboardDetailModal.querySelector('[data-dashboard-detail-eyebrow]');
+        var summary = dashboardDetailModal.querySelector('[data-dashboard-detail-summary]');
+        var search = dashboardDetailModal.querySelector('[data-dashboard-detail-search]');
         var head = dashboardDetailModal.querySelector('[data-dashboard-detail-head]');
-        var body = dashboardDetailModal.querySelector('[data-dashboard-detail-body]');
         var excel = dashboardDetailModal.querySelector('[data-dashboard-export-excel]');
         var pdf = dashboardDetailModal.querySelector('[data-dashboard-export-pdf]');
+        var category = dashboardDetailCategory(payload.type);
 
+        dashboardDetailPayload = payload;
         title.textContent = payload.title || 'Détail';
         description.textContent = payload.description || '';
-        count.textContent = (payload.rows || []).length + ' ligne(s)';
+        eyebrow.innerHTML = '<i class="bi bi-' + category.icon + '"></i>' + escapeDashboardHtml(category.label);
         head.innerHTML = '<tr>' + (payload.columns || []).map(function (column) {
             return '<th>' + escapeDashboardHtml(column) + '</th>';
         }).join('') + '</tr>';
-        body.innerHTML = (payload.rows || []).length ? payload.rows.map(function (row) {
-            return '<tr>' + row.map(function (value) {
-                return '<td>' + escapeDashboardHtml(value) + '</td>';
-            }).join('') + '</tr>';
-        }).join('') : '<tr><td colspan="' + Math.max(1, (payload.columns || []).length) + '"><div class="empty-state"><i class="bi bi-inbox"></i> Aucune donnée disponible.</div></td></tr>';
+        summary.innerHTML = dashboardDetailSummaries(payload).map(function (item) {
+            return '<article class="dashboard-detail-summary-card is-' + item.tone + '">' +
+                '<span class="dashboard-detail-summary-icon"><i class="bi bi-' + item.icon + '"></i></span>' +
+                '<div><span>' + escapeDashboardHtml(item.label) + '</span><strong>' + escapeDashboardHtml(item.value) +
+                '</strong><small>' + escapeDashboardHtml(item.note) + '</small></div></article>';
+        }).join('');
+        search.value = '';
+        renderDashboardRows(payload, '');
         excel.href = payload.exports.excel;
         pdf.href = payload.exports.pdf;
         state.hidden = true;
@@ -338,18 +503,23 @@
         var type = trigger.getAttribute('data-dashboard-detail');
         var state = dashboardDetailModal.querySelector('[data-dashboard-detail-state]');
         var content = dashboardDetailModal.querySelector('[data-dashboard-detail-content]');
+        var dialog = dashboardDetailModal.querySelector('[role="dialog"]');
         dashboardDetailTrigger = trigger;
+        dashboardDetailPayload = null;
         state.hidden = false;
         state.classList.remove('is-error');
-        state.innerHTML = '<i class="bi bi-arrow-repeat" aria-hidden="true"></i><span>Chargement des données...</span>';
+        state.innerHTML = '<div class="dashboard-detail-loader" aria-hidden="true"></div><strong>Préparation de l’analyse</strong><span>Chargement des données consolidées…</span>';
         content.hidden = true;
         dashboardDetailModal.classList.add('is-open');
         dashboardDetailModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
+        window.setTimeout(function () { dialog.focus(); }, 20);
 
         var detailUrl = trigger.getAttribute('data-detail-url') || ((window.BASE_URL || '') + '/dashboard/details');
+        dashboardDetailRequest = new AbortController();
         fetch(detailUrl + (detailUrl.indexOf('?') === -1 ? '?' : '&') + 'type=' + encodeURIComponent(type), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            signal: dashboardDetailRequest.signal
         })
             .then(function (response) {
                 if (!response.ok) {
@@ -357,10 +527,20 @@
                 }
                 return response.json();
             })
-            .then(renderDashboardDetail)
-            .catch(function () {
+            .then(function (payload) {
+                dashboardDetailRequest = null;
+                renderDashboardDetail(payload);
+            })
+            .catch(function (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
                 state.classList.add('is-error');
-                state.innerHTML = '<i class="bi bi-exclamation-triangle"></i><span>Impossible de charger ce détail.</span>';
+                state.innerHTML = '<i class="bi bi-exclamation-triangle"></i><strong>Analyse indisponible</strong><span>Impossible de charger ce détail pour le moment.</span><button type="button" data-dashboard-detail-retry>Réessayer</button>';
+                var retry = state.querySelector('[data-dashboard-detail-retry]');
+                if (retry) {
+                    retry.addEventListener('click', function () { openDashboardDetail(trigger); });
+                }
             });
     }
 
@@ -383,9 +563,34 @@
     });
 
     if (dashboardDetailModal) {
+        var dashboardSearch = dashboardDetailModal.querySelector('[data-dashboard-detail-search]');
+        if (dashboardSearch) {
+            dashboardSearch.addEventListener('input', function () {
+                if (dashboardDetailPayload) {
+                    renderDashboardRows(dashboardDetailPayload, dashboardSearch.value);
+                }
+            });
+        }
         dashboardDetailModal.addEventListener('click', function (event) {
             if (event.target === dashboardDetailModal) {
                 closeDashboardDetail();
+            }
+        });
+        dashboardDetailModal.addEventListener('keydown', function (event) {
+            if (event.key !== 'Tab') {
+                return;
+            }
+            var focusable = Array.from(dashboardDetailModal.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                .filter(function (element) { return element.offsetParent !== null; });
+            if (!focusable.length) {
+                return;
+            }
+            if (event.shiftKey && document.activeElement === focusable[0]) {
+                event.preventDefault();
+                focusable[focusable.length - 1].focus();
+            } else if (!event.shiftKey && document.activeElement === focusable[focusable.length - 1]) {
+                event.preventDefault();
+                focusable[0].focus();
             }
         });
     }
