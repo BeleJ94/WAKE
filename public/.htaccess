@@ -10,11 +10,13 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /WAKE/public/
+
+    # No fixed RewriteBase: this works both under /WAKE locally and at /
+    # when the VPS domain points directly to this public directory.
     RewriteRule (^|/)\. - [F,L]
-    RewriteRule ^uploads/.*\.(php|phtml|phar|cgi|pl|asp|aspx|jsp|sh)$ - [F,L]
+    RewriteRule ^uploads/.*\.(php|phtml|phar|cgi|pl|py|sh|asp|aspx|jsp)$ - [F,L,NC]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.php [QSA,L]
+    RewriteRule ^ index.php [QSA,END]
 </IfModule>

@@ -6,7 +6,15 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Protect application sources when the project root is used as DocumentRoot.
     RewriteRule ^(app|config|database|scripts|vendor|\.git|\.env)(/|$) - [F,L]
+
+    # Stop rewriting once the request has already been routed to /public.
+    # Without this guard Apache can produce /public/public/... indefinitely.
+    RewriteRule ^public(?:/|$) - [L]
+
+    # Route public requests to the web entry directory.
     RewriteRule ^$ public/ [L]
-    RewriteRule (.*) public/$1 [L]
+    RewriteRule ^(.+)$ public/$1 [L]
 </IfModule>
