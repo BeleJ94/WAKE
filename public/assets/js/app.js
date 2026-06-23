@@ -3,6 +3,19 @@
 
     var shell = document.querySelector('[data-app-shell]');
     var sidebarOverlay = document.querySelector('[data-sidebar-overlay]');
+    var loginPassword = document.querySelector('[data-login-password]');
+    var loginPasswordToggle = document.querySelector('[data-login-password-toggle]');
+
+    if (loginPassword && loginPasswordToggle) {
+        loginPasswordToggle.addEventListener('click', function () {
+            var isVisible = loginPassword.type === 'text';
+            loginPassword.type = isVisible ? 'password' : 'text';
+            loginPasswordToggle.setAttribute('aria-pressed', isVisible ? 'false' : 'true');
+            loginPasswordToggle.setAttribute('aria-label', isVisible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+            loginPasswordToggle.innerHTML = '<i class="bi bi-' + (isVisible ? 'eye' : 'eye-slash') + '" aria-hidden="true"></i>';
+            loginPassword.focus();
+        });
+    }
 
     function closeSidebar() {
         if (shell) {

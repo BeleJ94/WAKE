@@ -1,4 +1,3 @@
-# .github/workflows/deploy-wake.yml
 name: 🚀 Déploiement automatique WAKE
 
 on:
@@ -9,19 +8,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Récupérer le code
-        uses: actions/checkout@v4
-
-      - name: 🔗 Déployer sur le VPS
-        uses: appleboy/ssh-action@v1.0.0
+      - uses: actions/checkout@v4
+      - uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST_WAKE }}
           username: ${{ secrets.VPS_USER_WAKE }}
           key: ${{ secrets.VPS_SSH_KEY_WAKE }}
           script: |
+            echo "=== DÉPLOIEMENT DÉMARRÉ ==="
             cd /var/www/vhosts/belej-erp.com/wake.belej-erp.com
-            git pull origin main
+            echo "1. État avant mise à jour :"
+            git log -1 --oneline
+            echo "2. Récupération des changements..."
+            git fetch origin
+            echo "3. Mise à jour forcée..."
+            git reset --hard origin/main
+            echo "4. État après mise à jour :"
+            git log -1 --oneline
+            echo "5. Correction des permissions..."
             sudo chown -R www-data:www-data .
             sudo find . -type d -exec chmod 755 {} \;
             sudo find . -type f -exec chmod 644 {} \;
-            echo "✅ Déploiement WAKE terminé à $(date)"
+            echo "=== DÉPLOIEMENT TERMINÉ ==="
