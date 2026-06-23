@@ -8,15 +8,11 @@ class Client extends Model
     {
         return $this->db->query(
             'SELECT clients.*,
-                    COUNT(DISTINCT quotations.id) AS quotations_count,
-                    COUNT(DISTINCT sales_orders.id) AS orders_count,
-                    COALESCE(SUM(invoices.total_amount), 0) AS invoiced_total,
-                    COALESCE(SUM(invoices.paid_amount), 0) AS paid_total
+                    (SELECT COUNT(*) FROM quotations WHERE quotations.client_id = clients.id) AS quotations_count,
+                    (SELECT COUNT(*) FROM sales_orders WHERE sales_orders.client_id = clients.id) AS orders_count,
+                    (SELECT COALESCE(SUM(invoices.total_amount), 0) FROM invoices WHERE invoices.client_id = clients.id) AS invoiced_total,
+                    (SELECT COALESCE(SUM(invoices.paid_amount), 0) FROM invoices WHERE invoices.client_id = clients.id) AS paid_total
              FROM clients
-             LEFT JOIN quotations ON quotations.client_id = clients.id
-             LEFT JOIN sales_orders ON sales_orders.client_id = clients.id
-             LEFT JOIN invoices ON invoices.client_id = clients.id
-             GROUP BY clients.id
              ORDER BY clients.created_at DESC'
         )->fetchAll();
     }
@@ -46,4 +42,3 @@ class Client extends Model
         return (int) $this->db->lastInsertId();
     }
 }
-

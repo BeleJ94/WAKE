@@ -736,6 +736,42 @@
         });
     });
 
+    document.querySelectorAll('[data-client-portfolio]').forEach(function (portfolio) {
+        var search = portfolio.querySelector('[data-client-search]');
+        var status = portfolio.querySelector('[data-client-status]');
+        var rows = Array.prototype.slice.call(portfolio.querySelectorAll('[data-client-row]'));
+        var counter = portfolio.querySelector('[data-client-result-count]');
+        var empty = portfolio.querySelector('[data-client-empty]');
+
+        function applyClientFilters() {
+            var query = search ? (search.value || '').trim().toLowerCase() : '';
+            var selectedStatus = status ? status.value : '';
+            var visible = 0;
+
+            rows.forEach(function (row) {
+                var matchesQuery = !query || row.textContent.toLowerCase().indexOf(query) !== -1;
+                var matchesStatus = !selectedStatus || row.getAttribute('data-status') === selectedStatus;
+                var show = matchesQuery && matchesStatus;
+                row.hidden = !show;
+                visible += show ? 1 : 0;
+            });
+
+            if (counter) {
+                counter.textContent = visible + ' client' + (visible > 1 ? 's' : '');
+            }
+            if (empty) {
+                empty.hidden = visible !== 0;
+            }
+        }
+
+        if (search) {
+            search.addEventListener('input', applyClientFilters);
+        }
+        if (status) {
+            status.addEventListener('change', applyClientFilters);
+        }
+    });
+
     document.querySelectorAll('[data-treasury-datatable]').forEach(function (dataTable) {
         var table = dataTable.querySelector('.treasury-table');
         if (!table) {

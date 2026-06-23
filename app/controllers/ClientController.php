@@ -6,7 +6,22 @@ class ClientController extends Controller
 {
     public function index(): void
     {
-        $this->view('clients.index', ['title' => 'Portefeuille clients', 'clients' => (new Client())->all()]);
+        $clients = (new Client())->all();
+        $totalInvoiced = array_sum(array_map(static fn (array $client): float => (float) $client['invoiced_total'], $clients));
+        $totalPaid = array_sum(array_map(static fn (array $client): float => (float) $client['paid_total'], $clients));
+
+        $this->view('clients.index', [
+            'title' => 'Portefeuille clients',
+            'clients' => $clients,
+            'metrics' => [
+                'total' => count($clients),
+                'active' => count(array_filter($clients, static fn (array $client): bool => $client['status'] === 'active')),
+                'invoiced' => $totalInvoiced,
+                'paid' => $totalPaid,
+                'outstanding' => max(0, $totalInvoiced - $totalPaid),
+                'collection_rate' => $totalInvoiced > 0 ? ($totalPaid / $totalInvoiced) * 100 : 0,
+            ],
+        ]);
     }
 
     public function create(): void
